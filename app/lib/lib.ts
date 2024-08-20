@@ -1,10 +1,10 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
-import { loginUser } from "../types/types";
+import { loginUser, RegisterAccount } from "../types/types";
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
 import { compare, genSaltSync, hash } from "bcryptjs";
-import { UseSelector, useDispatch } from "react-redux";
+import { UseSelector, useDispatch, useSelector } from "react-redux";
 import { RootState } from "./redux/store";
 import { updateUser } from "./redux/user/userSlice";
 
@@ -81,63 +81,70 @@ export async function login(formData: any){
 
 }
 
-export async function register(formData: any){
+export async function register(user: RegisterAccount){
 
-    const user = formData;
-
-    console.log(user);
-
-    if(!user){
-
-        console.log('missing information');
-
-        return {error: 'Missing user information'}
-    }
+    try{
 
 
-    const prisma = new PrismaClient();
-
-    // const exsistingUser =  await prisma.user.findFirst({
-    //     where: {
-    //         username: user.username
-    //     }
-    // })
-
-    // if(exsistingUser){
-
-    //     return {error: 'Username already taken'}
-
-    // }
-
-    const salt = genSaltSync(10)
+        console.log(user);
     
-    const hashPassword = await hash(user.password, salt);
-
-    const newAccount = await prisma.user.create({
-        data: {
-            name: user.name,
-            email: user.email,
-            username: user.username,
-            password: hashPassword,
-            profilePicture: ''
+        if(!user.password){
+    
+            console.log('missing information');
+    
+            return 
         }
-    })
+    
+    
+        const prisma = new PrismaClient();
+    
+        // const exsistingUser =  await prisma.user.findFirst({
+        //     where: {
+        //         username: user.username
+        //     }
+        // })
+    
+        // if(exsistingUser){
+    
+        //     return {error: 'Username already taken'}
+    
+        // }
+    
+        const salt = genSaltSync(10)
+        
+        const hashPassword =  await hash(user.password, salt);
+    
+        const newAccount = await prisma.user.create({
+            data: {
+                name: user.name as string,
+                email: user.email as string,
+                username: user.username as string,
+                password: hashPassword,
+                profilePicture: ''
+            }
+        })
+    
+        if(!newAccount){
+    
+            console.log('There was an error creating your account');
+    
+            return
+    
+        }
+    
+        const expiration = new Date(Date.now() + 10 * 60 * 1000);
+    
+        const session = await encrypt({newAccount, expiration});
+    
+        cookies().set('session', session, {expires: expiration});
+    
+        return newAccount;
 
-    if(!newAccount){
+    }catch(error){
 
-        console.log('There was an error creating your account');
-
-        return {error: 'There was an error while creating your account'}
-
+        console.log(error);
+        
     }
-
-
-
-    const expiration = new Date(Date.now() + 10 * 60 * 1000);
-
-    const session = await encrypt({newAccount, expiration});
-
-    cookies().set('session', session, {expires: expiration});
 
 }
 
