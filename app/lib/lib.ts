@@ -3,12 +3,7 @@ import { cookies } from "next/headers";
 import { loginUser, RegisterAccount } from "../types/types";
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient, User } from "@prisma/client";
-import { compare, genSaltSync, hash } from "bcryptjs";
-import { UseSelector, useDispatch, useSelector } from "react-redux";
-import { RootState } from "./redux/store";
-import { updateUser } from "./redux/user/userSlice";
-
-
+import { compare }from "bcryptjs";
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -78,73 +73,6 @@ export async function login(formData: any){
     const session = await encrypt({user, experation});
 
     cookies().set('session', session, {expires: experation});
-
-}
-
-export async function register(user: RegisterAccount){
-
-    try{
-
-
-        console.log(user);
-    
-        if(!user.password){
-    
-            console.log('missing information');
-    
-            return 
-        }
-    
-    
-        const prisma = new PrismaClient();
-    
-        // const exsistingUser =  await prisma.user.findFirst({
-        //     where: {
-        //         username: user.username
-        //     }
-        // })
-    
-        // if(exsistingUser){
-    
-        //     return {error: 'Username already taken'}
-    
-        // }
-    
-        const salt = genSaltSync(10)
-        
-        const hashPassword =  await hash(user.password, salt);
-    
-        const newAccount = await prisma.user.create({
-            data: {
-                name: user.name as string,
-                email: user.email as string,
-                username: user.username as string,
-                password: hashPassword,
-                profilePicture: ''
-            }
-        })
-    
-        if(!newAccount){
-    
-            console.log('There was an error creating your account');
-    
-            return
-    
-        }
-    
-        const expiration = new Date(Date.now() + 10 * 60 * 1000);
-    
-        const session = await encrypt({newAccount, expiration});
-    
-        cookies().set('session', session, {expires: expiration});
-    
-        return newAccount;
-
-    }catch(error){
-
-        console.log(error);
-        
-    }
 
 }
 

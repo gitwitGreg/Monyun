@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { store } from "./lib/redux/store";
 import Providers from "./providers/provider";
+import {QueryClientProvider, QueryClient } from '@tanstack/react-query'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +22,7 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
+          
         </body>
     </html>
   );

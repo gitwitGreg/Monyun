@@ -8,7 +8,8 @@ const NavBar = () => {
 
     const user = useSelector((state: RootState) => state.userSlice.user);
 
-    console.log('user: ', user)
+    console.log('user: ', user);
+
     const dispatch = useDispatch;
 
 

@@ -1,57 +1,38 @@
-'use client'
-
 import { redirect } from 'next/navigation';
 import React, { useState } from 'react'
 import { useDispatch, UseDispatch, useSelector } from 'react-redux';
 import { UseSelector } from 'react-redux';
 import { updateUser } from '../lib/redux/user/userSlice';
-import { register } from '../lib/lib';
+import { useMutation } from '@tanstack/react-query';
+import { QUERY_KEYS } from '../lib/tanstack/queryKeys';
+import { User } from '@prisma/client';
+import { useRegisterUser } from '../lib/tanstack';
+import { RegisterAccount } from '../types/types';
 
 const SignUp = () => {
 
-  const [name, setName] = useState<string | undefined>();
-
-  const [username, setUsername] = useState<string | undefined>();
-
-  const [email, setEmail] = useState<string | undefined>();
-
-  const [password, setPassword] = useState<string | undefined>();
-
-
-  const dispatch = useDispatch();
-
-  const registerUser = async(e: React.FormEvent<HTMLInputElement>) => {
-
-    e.preventDefault();
-
-    const user = {
-      email: email,
-      name: name,
-      password: password,
-      username: username,
-
-    }
-
-    const newAccount = await register(user);
-
-
-    if(newAccount){
-      console.log('dispatch')
-      dispatch(updateUser(newAccount))
-    }else{
-      console.log('missing account');
-    }
-    
-    redirect(`/`);
-
-  }
-
-  
   return (
 
-    <div className='h-screen w-full flex flex-col items-center justify-center bg-black'>
+    <div className='h-screen w-full flex flex-col items-center justify-center bg-black text-black'>
 
-      <form onSubmit={() => registerUser}
+      <form action={async(formData)=> {
+
+        'use server'
+
+        const user = {
+        email: formData.get('email') as string,
+        name: formData.get('name') as string,
+        password: formData.get('password')as string,
+        username: formData.get('username')as string
+        }
+
+        const registeUser = useRegisterUser();
+
+        console.log('user we are passing: ', user);
+
+        registeUser.mutateAsync(user);
+         
+      }}
       className='flex flex-col gap-10 w-[50%] p-10 bg-white py-28 rounded-2xl'>
 
         <div className="flex justify-center items-center">
@@ -61,7 +42,7 @@ const SignUp = () => {
         <input 
           className='w-full p-5 h-auto rounded-2xl border'
           type="name"
-          onChange={(e) => setName(e.target.value)}
+          name='name'
           placeholder="Name"
         />
 
@@ -69,7 +50,6 @@ const SignUp = () => {
           className='w-full p-5 h-auto rounded-2xl border'
           type="email"
           name="email"
-          onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
         />
 
@@ -78,14 +58,14 @@ const SignUp = () => {
           <input
           className='w-full p-5 h-auto rounded-2xl border text-black'
           type="password"
-          onChange={(e) => setPassword(e.target.value)}
+          name='password'
           placeholder="Password"
           />
 
           <input
           className='w-full p-5 h-auto rounded-2xl border text-black'
           type="username"
-          onChange={(e)=> setUsername(e.target.value)}
+          name= 'username'
           placeholder="Username"
           />
 
