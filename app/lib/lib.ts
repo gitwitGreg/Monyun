@@ -4,6 +4,8 @@ import { loginUser, RegisterAccount } from "../types/types";
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient, User } from "@prisma/client";
 import { compare }from "bcryptjs";
+import { updateUser } from "./redux/user/userSlice";
+
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -18,6 +20,7 @@ export async function encrypt(payload: any){
     .setExpirationTime('10 seconds from now')
     .sign(key)
 
+
 }
 
 export async function decrypt(input: any) : Promise<any> {
@@ -29,56 +32,12 @@ export async function decrypt(input: any) : Promise<any> {
     return payload;
 }
 
-export async function login(formData: any){
-
-    const user = formData;
-
-    console.log(user);
-
-    const prisma = new PrismaClient();
-
-    const userAccount = await prisma.user.findFirst({
-
-        where: {
-
-            email: user.email,
-
-        }
-    })
-
-    if(!userAccount){
-
-        console.log('user doesnt have an account');
-
-        return {error: 'User does not have an account'};
-
-    }
-
-    const passwordCompare = await compare(userAccount.password,  user.password);
-
-    if(!passwordCompare){
-
-        console.log('Incoorect password provided');
-
-        return {error: 'Incoorect password'}
-
-    }
-
-    // updateUser(userAccount);
-
-    /* check the database to see if the user is valid if not throw error */
-
-    const experation = new Date(Date.now() + 10 * 60 * 1000);
-
-    const session = await encrypt({user, experation});
-
-    cookies().set('session', session, {expires: experation});
-
-}
 
 export async function updateSession(req: NextRequest){
 
     const session = req.cookies.get('session')?.value;
+
+    console.log('session: ', session);
 
     if(!session){
 
@@ -110,17 +69,22 @@ export async function updateSession(req: NextRequest){
 
 export async function getSession(){
 
-    const session = cookies().get('session')?.value;
+    const cookie = cookies().get('session')?.value;
 
-    if(!session){
+    if(!cookie){
 
         console.log('no session information');
 
         return null;
     }
 
-    return decrypt(session);
+    const session = await decrypt(cookie);
 
+
+}
+
+export async function deleteSession(){
+    cookies().delete('session');
 }
 
 
