@@ -11,31 +11,55 @@ const secretKey = process.env.JWT_SECRET;
 
 const key = new TextEncoder().encode(secretKey);
 
+interface UserJwtPayload {
+    jti: string,
+    iat: string,
+}
+
 
 export async function encrypt(payload: any){
-
+    
     return await new SignJWT(payload)
     .setProtectedHeader({alg: 'HS256'})
     .setIssuedAt()
-    .setExpirationTime('10 seconds from now')
+    .setExpirationTime('10m')
     .sign(key)
 
 
 }
 
-export async function decrypt(input: any) : Promise<any> {
+export async function decrypt(input: string) : Promise<any> {
 
-    const payload = await jwtVerify(input, key, {
-        algorithms: ['HS256']
-    });
 
-    return payload;
+    try{
+
+        const { payload } = await jwtVerify(input, key, {
+            algorithms: ['HS256']
+            
+        });
+
+
+        if(!payload){
+
+            console.log('we are missing a payload');
+
+            throw new Error('Missing payload');
+        }
+
+        console.log('we are getting something back')
+
+        return payload as unknown as UserJwtPayload;
+
+    }catch(error){
+        console.log('error');
+    }
+
 }
 
 
 export async function updateSession(req: NextRequest){
 
-    const session = req.cookies.get('session')?.value;
+    const session: any= req.cookies.get('session')?.value;
 
     console.log('session: ', session);
 
@@ -55,7 +79,7 @@ export async function updateSession(req: NextRequest){
 
     res.cookies.set({
 
-        name: session,
+        name: session.name,
 
         value: await encrypt(parsed),
 

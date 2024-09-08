@@ -40,6 +40,12 @@ export default function signin(){
 
         router.refresh();
 
+      },
+
+      onError: (data) => {
+
+        setErrMess(data.message);
+        
       }
 
     })
@@ -60,7 +66,7 @@ export default function signin(){
     <div className='h-screen w-full flex flex-col items-center justify-center bg-black'>
 
       <form onSubmit={handleSubmit}
-      className='flex flex-col gap-10 w-[50%] p-10 bg-white py-28 rounded-2xl'>
+      className='flex flex-col gap-10 w-[50%] p-10 bg-white py-28 rounded-2xl text-black'>
 
         {errMess && (
           <div className="bg-red-500 flex h-full w-full items-center">

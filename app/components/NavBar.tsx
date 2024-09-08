@@ -21,6 +21,8 @@ const NavBar = () => {
 
   const userId = searchParams.get('id');
 
+  console.log('userId', userId);
+
   const {data: userInfo, error, isLoading} = useFetchUserInfo(userId as string);
 
   console.log(userInfo);
