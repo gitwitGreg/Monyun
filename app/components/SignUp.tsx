@@ -9,6 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { User } from '@prisma/client';
 import { useRegisterUser } from '../lib/tanstack';
 import { useRouter } from 'next/navigation'
+import Link from 'next/link';
 
 const SignUp = () => {
 
@@ -105,6 +106,14 @@ const SignUp = () => {
           />
 
         </div>
+
+       <div className=' items-center flex justify-center'>
+          <Link href = '/signin'>
+            <p className='hover:underline'>
+              Already have an account?
+            </p>
+          </Link>
+       </div>
 
         <div className=" flex w-full items-center justify-center">
 

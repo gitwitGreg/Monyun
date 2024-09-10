@@ -2,9 +2,9 @@ export const fetchUserInfo = async(userId: string) => {
 
     try{
 
-        console.log('id being send: ', userId)
+        console.log('id being send: ', userId);
 
-        const response = await fetch('/api/signin',{
+        const response = await fetch('/api/fetchUserId',{
 
             method: 'POST',
 

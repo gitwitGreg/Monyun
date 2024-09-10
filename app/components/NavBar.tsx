@@ -10,6 +10,7 @@ import { useFetchUserInfo } from '../lib/tanstack'
 import { useState } from 'react'
 import { User } from '@prisma/client'
 import WarningIcon from '@mui/icons-material/Warning';
+import Link from 'next/link'
 
 const NavBar = () => {
 
@@ -25,19 +26,46 @@ const NavBar = () => {
 
   const {data: userInfo, error, isLoading} = useFetchUserInfo(userId as string);
 
-  console.log(userInfo);
+  console.log('user info: ', userInfo);
+
+  useEffect(() => {
+
+  },[])
 
 
   useEffect(() => {
     if(userInfo){
+      console.log('we have user info: ', userInfo);
       dispatch(updateUser(userInfo))
     }
   },[userInfo]);
 
   if(sessionAccount){
     return(
-      <div>
-        Worked
+      <div className='bg-black text-white p-10 flex justify-between border-black'>
+
+        <div>
+          <Link href='/'>
+            <h1 className='text-xl text-purple-300 font-bold'>
+              Monyun
+            </h1>
+          </Link>
+        </div>
+
+        <div className='flex'>
+          <div>
+            {sessionAccount.profilePicture && (
+              <div className='rounded-xl'>
+                <img 
+                src={sessionAccount.profilePicture}
+                width={20}
+                height={20}
+                alt='Users profile picture'/>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
     )
   }

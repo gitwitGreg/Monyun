@@ -5,6 +5,7 @@ import LoginIcon from '@mui/icons-material/Login';
 
 import { useEffect, useState } from "react";
 import { useSignInUser } from "../lib/tanstack";
+import Link from "next/link";
 
 export default function signin(){
 
@@ -69,7 +70,7 @@ export default function signin(){
       className='flex flex-col gap-10 w-[50%] p-10 bg-white py-28 rounded-2xl text-black'>
 
         {errMess && (
-          <div className="bg-red-500 flex h-full w-full items-center">
+          <div className="bg-red-500 flex h-full w-full items-center p-5">
             <h1>{errMess}</h1>
           </div>
         )}
@@ -91,6 +92,15 @@ export default function signin(){
         onChange={(e)=> setPassword(e.target.value)}
         placeholder="Password"
         />
+
+        <div className="flex justify-center">
+          <Link href='/signup'>
+            <p className='hover:underline'>
+              Dont have an account
+            </p>
+          </Link>
+
+        </div>
 
         <div className=" flex w-full items-center justify-center">
           <button className="bg-black text-white rounded-xl p-5 w-[50%] hover:bg-white hover:text-black ease-in hover:border">Login</button>
