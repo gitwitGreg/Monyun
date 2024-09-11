@@ -26,8 +26,6 @@ const NavBar = () => {
 
   const {data: userInfo, error, isLoading} = useFetchUserInfo(userId as string);
 
-  console.log('user info: ', userInfo);
-
   useEffect(() => {
 
   },[])
@@ -35,7 +33,6 @@ const NavBar = () => {
 
   useEffect(() => {
     if(userInfo){
-      console.log('we have user info: ', userInfo);
       dispatch(updateUser(userInfo))
     }
   },[userInfo]);
