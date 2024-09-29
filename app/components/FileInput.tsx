@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react'
 import * as pdfjsLib from 'pdfjs-dist';
 import 'pdfjs-dist/webpack';
-import { Metadata } from 'next';
+import Tesseract from 'tesseract.js';
+import { updateSubscriptions } from '../lib/redux/subscriptions/subcriptionSlice';
+import { useDispatch, UseDispatch, useSelector } from 'react-redux';
+import { RootState } from '../lib/redux/store';
 
 
 const FileInput = () => {
@@ -14,9 +17,14 @@ const FileInput = () => {
 
   const [pdfText, setPdfText] = useState<string|undefined>();
 
-  const [metaData, setMetaData] = useState<any|undefined>();
-
   const [err, setErr] = useState<string|undefined>();
+
+  const userSubscriptions = useSelector((state: RootState) => state.subscription.user);
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const dispatch = useDispatch();
+
 
   const onFileChange = async(e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -34,40 +42,172 @@ const FileInput = () => {
 
     const fileArray = Array.from(files)
 
+    try{
 
-    fileArray.forEach((file) => {
+      fileArray.forEach((file) => {
 
-      const fileReader = new FileReader();
+        const fileReader = new FileReader();
+        
+        console.log('we have the file: ', file);
+  
+        fileReader.onload = async(event) => {
 
-      fileReader.onload = onLoadFile;
+           await onLoadFile(event);
 
-      fileReader.readAsArrayBuffer(file);
-      
-    });
+        };
+
+        fileReader.onerror = (error) => {
+
+          console.log('error: ', error);
+
+        }
+  
+        const buffer = fileReader.readAsArrayBuffer(file);
+
+        console.log('past the file reader buffer', buffer);
+        
+      });
+
+    }catch(error){
+
+      console.log(error);
+
+    }
 
   }
 
-  function onLoadFile(event: any){
+  const onLoadFile = async(event: any) => {
 
     const typedArray = new Uint8Array(event.target.result);
 
-    pdfjsLib.getDocument({
-        data: typedArray
-    }).promise.then((pdf) => {
+    setIsLoading(true);
 
-      setMetaData(metaData);
+   try{
 
-      pdf.getPage(1).then((page)=>{
-        page.getTextContent().then((content) => {
-          let text = '';
-          content.items.forEach((item: any) => {
-            text += item.str + ' '
-          });
-          setPdfText(text)
-        })
-      })
+    const pdf = await pdfjsLib.getDocument({
+      data: typedArray
+    }).promise
 
-    })   
+    if(!pdf){
+
+      console.log('error loading the pdf');
+
+      return;
+    }
+
+    const numPages = pdf.numPages;
+
+    console.log('num pages: ', numPages);
+
+    let pageContent = '';
+
+    for(let i = 1; i <= numPages; i++){
+
+      console.log("on page number: ", i);
+
+      const page = await pdf.getPage(i);
+
+      if(!page){
+
+        console.log('error getting page');
+
+        return;
+
+      }
+
+
+      const operatorList = await page.getOperatorList();
+
+      const hasImages = operatorList.fnArray.includes(pdfjsLib.OPS.paintImageXObject);
+
+      if (hasImages) {
+
+        console.log(`Page ${i} contains images, no selectable text available.`);
+
+
+        const veiwPort = page.getViewport({
+          scale: 1
+        });
+
+        const canvas = document.createElement('canvas');
+
+        const context = canvas.getContext('2d');
+
+        if(!context){
+
+          console.log('no context');
+
+          return;
+        }
+
+        canvas.height = veiwPort.height;
+
+        canvas.width = veiwPort.width;
+
+        const renderTask = page.render({
+          canvasContext: context,
+          viewport: veiwPort
+        });
+
+        await renderTask.promise;
+
+        const ocrResult = await Tesseract.recognize(canvas, 'eng');
+
+        pageContent += ocrResult.data.text + ' ';
+
+        console.log(`ocr text for page ${i}: `, ocrResult);
+
+        continue;
+
+      }
+
+      console.log('page: ', page );
+
+      const content = await page.getTextContent();
+
+      console.log('content: ', content);
+
+      if(!content || !content.items){
+
+        console.log('error getting page content');
+
+        return;
+
+      }
+
+      if(content.items.length === 0) {
+
+        console.log('no content on this page');
+        
+        continue;
+
+      }
+      
+      content.items.forEach((item: any) => {
+
+        if(!item.str){
+
+          console.log('the item on this page has null content');
+
+        }else{
+
+          console.log('item: ', item);
+
+          pageContent += item.str + ' ';
+
+        }
+
+      });
+      
+    } 
+
+    setPdfText(pageContent);
+
+   }catch(error){
+
+    console.log('error in on file load: ', error);
+
+   }
 
   }
 
@@ -75,6 +215,7 @@ const FileInput = () => {
   const sendToAi = async(text: string) => {
 
     console.log('sending to ai');
+
 
     const response = await fetch('/api/chatAi', {
 
@@ -103,19 +244,48 @@ const FileInput = () => {
 
     setSubscriptions(foundSubs);
 
+    console.log('found subs: ', foundSubs);
+
+    if(!foundSubs){
+
+      console.log('we havent found the subscriptions yet');
+
+      return;
+
+    }
+
+    console.log('about to dispatch subsriptionsz')
+
+
+    console.log('user subs from  before dispatch', userSubscriptions)
+
+    dispatch(updateSubscriptions({subscriptions: foundSubs}));
+
+    console.log('user subs after dispatch', userSubscriptions);
+
+    setIsLoading(false);
+
   }
 
   useEffect(() => {
+    
     if(pdfText){
+
       sendToAi(pdfText);
+
     }
+
   },[pdfText])
 
-  if(subscriptions){
-    console.log(subscriptions);
+
+  if(userSubscriptions){
+
+    console.log(userSubscriptions.subscriptions);
+
   }
 
   return (
+
     <div className="w-full h-auto">
 
       {!bankStatents && (
@@ -123,7 +293,9 @@ const FileInput = () => {
           <div className="flex justify-center">
 
             <h1 className="text-xl font-serif mb-4">
+
               Upload Bank statements
+
             </h1>
 
           </div>
@@ -159,6 +331,7 @@ const FileInput = () => {
 
     </div>
   );
+
 }
 
 export default FileInput

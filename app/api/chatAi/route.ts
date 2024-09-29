@@ -10,8 +10,6 @@ import OpenAI from "openai";
 
 export async function POST (req: NextRequest){
 
-    console.log('starting')
-
     /** convert request to json */
     const userBankData = await req.json();
     
