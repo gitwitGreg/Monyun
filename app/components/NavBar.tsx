@@ -27,7 +27,6 @@ const NavBar = () => {
   const {data: userInfo, error, isLoading} = useFetchUserInfo(userId as string);
 
   useEffect(() => {
-
   },[])
 
 

@@ -18,13 +18,10 @@ const subscriptionSlice = createSlice({
 
         updateSubscriptions: (state, subscriptionInfo: PayloadAction<any>) => {
 
-            console.log('Updating subscriptions with:', subscriptionInfo.payload.subscriptions);
 
             state.user = {
                 subscriptions: subscriptionInfo.payload.subscriptions,
             }
-
-            console.log('Updated state:', state.user);
 
         }
         

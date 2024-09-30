@@ -21,7 +21,11 @@ export async function POST (req: NextRequest){
         {
           role: "system",
           content:
-            "You are a helpful finance assistant that will take in users' bank statements in text form, identify recurring subscriptions, provide the name of the subscription, and offer a link to cancel it.",
+            "You are a helpful finance assistant that will take in users' bank statements in text form "  +
+
+            "identify recurring subscriptions, provide the name of the subscription" +
+            
+            "write a short paragraph for each subscription providing how much they are spending and when the charge occures",
         },
         {
           role: "user",

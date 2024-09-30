@@ -8,7 +8,8 @@ export default function Home() {
 
     <main className="flex min-h-screen flex-col">
 
-        <NavBar />    
+        <NavBar />   
+         
         <Dashboard/>     
 
     </main>

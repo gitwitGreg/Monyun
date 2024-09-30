@@ -7,6 +7,8 @@ import Tesseract from 'tesseract.js';
 import { updateSubscriptions } from '../lib/redux/subscriptions/subcriptionSlice';
 import { useDispatch, UseDispatch, useSelector } from 'react-redux';
 import { RootState } from '../lib/redux/store';
+import { useRouter } from 'next/navigation';
+import { TailSpin } from 'react-loader-spinner';
 
 
 const FileInput = () => {
@@ -25,6 +27,7 @@ const FileInput = () => {
 
   const dispatch = useDispatch();
 
+  const router = useRouter();
 
   const onFileChange = async(e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -265,6 +268,8 @@ const FileInput = () => {
 
     setIsLoading(false);
 
+    router.refresh();
+
   }
 
   useEffect(() => {
@@ -282,6 +287,23 @@ const FileInput = () => {
 
     console.log(userSubscriptions.subscriptions);
 
+  }
+
+  if(isLoading){
+
+    return (
+      <div className="h-screen w-full items-center flex justify-center">
+
+        <TailSpin
+        height="200"
+        width="200"
+        color="orange"
+        ariaLabel="loading"
+        />
+
+      </div>
+
+    )
   }
 
   return (
